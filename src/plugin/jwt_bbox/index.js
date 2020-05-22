@@ -12,10 +12,13 @@ const {
 const CLIENT_CACHE_DURATION = 43200 * 1000;
 //const utils = require("../../utils");
 
+
+const tileObject = require("./TileObjects");
+
 /**
  * https://www.npmjs.com/package/jsonwebtoken#jwtverifytoken-secretorpublickey-options-callback
  */
-class JwtPlugin2 extends BasePlugin {
+class JwtBBoxPlugin extends BasePlugin {
   static initialize(server) {}
 
   /**
@@ -61,26 +64,27 @@ class JwtPlugin2 extends BasePlugin {
       res.statusCode = 400;
       return res;
     }
-    console.log("zoom=", url_zoom);
-    console.log("x=", url_x);
-    console.log("y=", url_y);
+    //console.log("zoom=", url_zoom);
+    //console.log("x=", url_x);
+    //console.log("y=", url_y);
 
 
 
-    let urlBBox = getBoundingBoxFromTile(new Tile(url_zoom, url_x, url_y));
+    let urlBBox = tileObject.getBoundingBoxFromTile(new tileObject.Tile(url_zoom, url_x, url_y));
 
     let token = plugin.server.utils.parse_bearer_authorization_header(req.headers["authorization"]).token;
     let tokenBody = token.split(".")[1];
     let tokenJsonObject = JSON.parse(plugin.server.utils.base64_decode(tokenBody));
 
 
-    let bboxes = jsonObj.bboxes;
+    let bboxes = tokenJsonObject.bboxes;
     if (bboxes) {
       for (let i = 0; i < bboxes.length; i++) {
-        let jsonZoomBBox = new ZoomBoundingBox(bboxes[i].minZoom, bboxes[i].maxZoom, new BBox(bboxes[i].west, bboxes[i].east, bboxes[i].north, bboxes[i].south));
-        if (isInRange(jsonZoomBBox.minZoom, jsonZoomBBox.maxZoom, url_zoom)) {
-          let jsonBBox = new BBox(bboxes[i].west, bboxes[i].east, bboxes[i].north, bboxes[i].south);
-          if (overlap(jsonBBox.bbox, urlBBox)) {
+        //console.log(bboxes[i]);
+        let jsonZoomBBox = new tileObject.ZoomBoundingBox(bboxes[i].minZoom, bboxes[i].maxZoom, new tileObject.BoundingBox(bboxes[i].west, bboxes[i].east, bboxes[i].north, bboxes[i].south));
+        if (tileObject.isInRange(jsonZoomBBox.minZoom, jsonZoomBBox.maxZoom, url_zoom)) {
+          //let jsonBBox = new tileObject.BoundingBox(bboxes[i].west, bboxes[i].east, bboxes[i].north, bboxes[i].south);
+          if (tileObject.overlap(jsonZoomBBox.bbox, urlBBox)) {
             res.statusCode = 200;
             return res;
           }
@@ -95,5 +99,5 @@ class JwtPlugin2 extends BasePlugin {
 }
 
 module.exports = {
-  JwtPlugin2
+  JwtBBoxPlugin
 };
