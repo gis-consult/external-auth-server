@@ -18,9 +18,16 @@ let config_token = {
    * using the same aud for multiple tokens allows sso for all services sharing the aud
    */
   //aud: "some application id", //should be unique to prevent cookie/session hijacking, defaults to a hash unique to the whole config
-  eas: {
-    plugins: [{...}, {...},{...}], // list of plugin definitions, refer to PLUGINS.md for details
-  }
+	eas: {
+		plugins: [{
+			type: " jwt_bbox",
+			config: {
+				secret: "a_jwt_secret",
+				options: {
+				}
+			}
+		}],
+	}
 };
 
 config_token = jwt.sign(config_token, config_token_sign_secret);
