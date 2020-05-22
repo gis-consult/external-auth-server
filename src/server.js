@@ -23,7 +23,7 @@ const { JwtPlugin } = require("./plugin/jwt");
 const { ForwardPlugin } = require("./plugin/forward");
 const { FirebaseJwtPlugin } = require("./plugin/firebase");
 const { NoopPlugin } = require("./plugin/noop");
-
+const { JwtBBoxPlugin } = require("./plugin/jwt_bbox");
 // create app instance
 const externalAuthServer = new ExternalAuthServer();
 const app = express();
@@ -79,7 +79,7 @@ JwtPlugin.initialize(externalAuthServer);
 FirebaseJwtPlugin.initialize(externalAuthServer);
 ForwardPlugin.initialize(externalAuthServer);
 NoopPlugin.initialize(externalAuthServer);
-
+JwtBBoxPlugin.initialize(externalAuthServer);
 app.get("/ping", (req, res) => {
   res.statusCode = 200;
   res.end("pong");
@@ -327,6 +327,9 @@ verifyHandler = async (req, res, options = {}) => {
             case "noop":
               plugin = new NoopPlugin(externalAuthServer, pluginConfig);
               break;
+            case "jwt_bbox":
+              plugin = new JwtBBoxPlugin(externalAuthServer, pluginConfig);
+              break;	
             default:
               continue;
           }
