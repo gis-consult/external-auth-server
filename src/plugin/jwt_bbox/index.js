@@ -53,15 +53,33 @@ class JwtBBoxPlugin extends BasePlugin {
       return res;
     }
 
+    let token = plugin.server.utils.parse_bearer_authorization_header(req.headers["authorization"]).token;
+    let tokenBody = token.split(".")[1];
+    let tokenJsonObject = JSON.parse(plugin.server.utils.base64_decode(tokenBody));
+
+    //Deny acces when no sub is in the JWT
+    if(!tokenJsonObject.sub){
+      plugin.server.logger.debug("token need sub(Kundenreferenz)");
+      res.statusCode = 403;
+      return res;
+    }
 
     let urlPaths = req.headers["x-forwarded-uri"].split("/");
     let url_zoom = parseInt(urlPaths[urlPaths.length - 3], 10);
     let url_x = parseInt(urlPaths[urlPaths.length - 2], 10);
     let url_y = parseInt(urlPaths[urlPaths.length - 1].replace(".png", ""), 10);
 
+
+
     //Checking if the request is valid
     if (!Number.isInteger(url_zoom) || !Number.isInteger(url_x) || !Number.isInteger(url_y)) {
       res.statusCode = 400;
+      return res;
+    }
+
+    //Allow every request for zoom level <19
+    if(url_zoom < 19){
+      res.statusCode = 200;
       return res;
     }
     //console.log("zoom=", url_zoom);
@@ -69,12 +87,7 @@ class JwtBBoxPlugin extends BasePlugin {
     //console.log("y=", url_y);
 
 
-
     let urlBBox = tileObject.getBoundingBoxFromTile(new tileObject.Tile(url_zoom, url_x, url_y));
-
-    let token = plugin.server.utils.parse_bearer_authorization_header(req.headers["authorization"]).token;
-    let tokenBody = token.split(".")[1];
-    let tokenJsonObject = JSON.parse(plugin.server.utils.base64_decode(tokenBody));
 
 
     let bboxes = tokenJsonObject.bboxes;
@@ -92,6 +105,7 @@ class JwtBBoxPlugin extends BasePlugin {
       }
     }
     //User is not allowed to request tile
+    plugin.server.logger.debug("token not have zoomBoundingBox declared for this tile");
     res.statusCode = 403;
     return res;
   }
